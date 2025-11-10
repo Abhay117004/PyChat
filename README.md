@@ -120,20 +120,6 @@ python run.py index   :: to build/update the vector index
 python run.py serve   :: to start the API server (or use uvicorn)
 ```
 
-5. Open `frontend/index.html` to view the simple local UI (or hit the FastAPI endpoints).
-
-## Docker (example)
-
-```dockerfile
-FROM python:3.9-slim
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-COPY . .
-EXPOSE 8000
-CMD ["python", "run.py", "serve"]
-```
-
 ## Notes and safety
 
 - Never commit `.env` or API keys to the repository. Use `.env.example` for names only.
