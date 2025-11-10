@@ -140,17 +140,4 @@ CMD ["python", "run.py", "serve"]
 - Keep the virtualenv out of the repository. Add it to `.gitignore` (e.g., `PyChat/`).
 - If an API key was pushed previously, rotate/revoke it immediately at the provider (deleting from git history is not enough).
 
-## Contributing
 
-1. Fork
-2. Create a branch
-3. Implement changes and tests
-4. Open a PR
-
----
-
-If you'd like, I can also:
-- run a git-safe replacement commit for this README and push it to your remote, or
-- open a PR with the cleaned README if you'd prefer to keep the remote untouched until you review.
-
-Which would you like me to do next? (commit+push / open PR / just save locally)
