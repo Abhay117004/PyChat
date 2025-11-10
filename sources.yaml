@@ -1,0 +1,136 @@
+sources:
+  # ============================================
+  # CORE PYTHON - Official Documentation
+  # ============================================
+  python_official:
+    - url: https://docs.python.org/3/tutorial/index.html
+      max_pages: 300
+      priority: 1
+      quality_threshold: 40
+      description: "Python Tutorial - Core language"
+    
+    - url: https://docs.python.org/3/library/index.html
+      max_pages: 500
+      priority: 1
+      quality_threshold: 35
+      description: "Standard Library Reference"
+      
+    - url: https://docs.python.org/3/howto/index.html
+      max_pages: 200
+      priority: 1
+      quality_threshold: 40
+      description: "How-To Guides"
+
+  # ============================================
+  # DATA SCIENCE - NumPy, Pandas
+  # ============================================
+  data_science:
+    - url: https://numpy.org/doc/stable/user/absolute_beginners.html
+      max_pages: 300
+      priority: 1
+      quality_threshold: 40
+      description: "NumPy Beginners Guide"
+    
+    - url: https://numpy.org/doc/stable/user/basics.html
+      max_pages: 250
+      priority: 1
+      quality_threshold: 35
+      description: "NumPy Basics"
+      
+    - url: https://pandas.pydata.org/docs/user_guide/10min.html
+      max_pages: 400
+      priority: 1
+      quality_threshold: 40
+      description: "Pandas Getting Started"
+    
+    - url: https://pandas.pydata.org/docs/user_guide/index.html
+      max_pages: 350
+      priority: 1
+      quality_threshold: 35
+      description: "Pandas User Guide"
+
+  # ============================================
+  # MACHINE LEARNING - Scikit-Learn
+  # ============================================
+  machine_learning:
+    - url: https://scikit-learn.org/stable/tutorial/basic/tutorial.html
+      max_pages: 200
+      priority: 1
+      quality_threshold: 40
+      description: "Scikit-Learn Tutorial"
+    
+    - url: https://scikit-learn.org/stable/supervised_learning.html
+      max_pages: 300
+      priority: 1
+      quality_threshold: 35
+      description: "Supervised Learning Guide"
+
+  # ============================================
+  # DEEP LEARNING - PyTorch & TensorFlow
+  # ============================================
+  deep_learning:
+    - url: https://pytorch.org/tutorials/beginner/basics/intro.html
+      max_pages: 300
+      priority: 1
+      quality_threshold: 40
+      description: "PyTorch Basics"
+    
+    - url: https://pytorch.org/tutorials/beginner/introyt.html
+      max_pages: 200
+      priority: 1
+      quality_threshold: 40
+      description: "PyTorch YouTube Series"
+    
+    - url: https://www.tensorflow.org/tutorials/quickstart/beginner
+      max_pages: 200
+      priority: 1
+      quality_threshold: 40
+      description: "TensorFlow Quickstart"
+    
+    - url: https://keras.io/getting_started/
+      max_pages: 150
+      priority: 1
+      quality_threshold: 40
+      description: "Keras Getting Started"
+
+  # ============================================
+  # NLP & TRANSFORMERS - Hugging Face
+  # ============================================
+  nlp:
+    - url: https://huggingface.co/docs/transformers/quicktour
+      max_pages: 200
+      priority: 1
+      quality_threshold: 40
+      description: "Transformers Quick Tour"
+    
+    - url: https://huggingface.co/docs/transformers/task_summary
+      max_pages: 150
+      priority: 1
+      quality_threshold: 40
+      description: "Transformers Task Guide"
+
+  # ============================================
+  # WEB FRAMEWORKS
+  # ============================================
+  web_frameworks:
+    - url: https://fastapi.tiangolo.com/tutorial/first-steps/
+      max_pages: 200
+      priority: 1
+      quality_threshold: 40
+      description: "FastAPI Tutorial"
+    
+    - url: https://flask.palletsprojects.com/en/stable/quickstart/
+      max_pages: 150
+      priority: 1
+      quality_threshold: 40
+      description: "Flask Quickstart"
+
+  # ============================================
+  # ASYNC PROGRAMMING
+  # ============================================
+  async_python:
+    - url: https://docs.python.org/3/library/asyncio-task.html
+      max_pages: 150
+      priority: 1
+      quality_threshold: 40
+      description: "Asyncio Tasks and Coroutines"
