@@ -89,7 +89,18 @@ class Settings(BaseSettings):
 
     api_host: str = "127.0.0.1"
     api_port: int = 8000
+        # existing stuff
+    collection_name: str = "rag_collection"
 
+    # Qdrant config — loaded from .env automatically
+    QDRANT_URL: str
+    QDRANT_API_KEY: str
+    QDRANT_COLLECTION: str = "pychat_knowledge"
+
+    class Config:
+        env_file = ".env"
+        env_file_encoding = "utf-8"
+        extra = "ignore"
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
@@ -97,3 +108,6 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+QDRANT_URL = settings.QDRANT_URL
+QDRANT_API_KEY = settings.QDRANT_API_KEY
+QDRANT_COLLECTION = settings.QDRANT_COLLECTION

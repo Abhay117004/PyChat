@@ -132,5 +132,4 @@ checkpoints/
 crawled.jsonl
 quality_report.json
 metrics.json
-migrate_to_qdrant.py
 PyChat/

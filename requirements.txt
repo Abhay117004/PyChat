@@ -27,4 +27,5 @@ sentence-transformers
 simhash
 tqdm
 uvicorn
+torch
 

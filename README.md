@@ -1,129 +1,266 @@
-# PyChat RAG System
+# 🧠 PyChat — AI-Powered Python Programming Assistant
 
-A Retrieval-Augmented Generation (RAG) system for Python programming assistance, built with FastAPI, ChromaDB, and Groq LLM.
+PyChat is a **production-grade Retrieval-Augmented Generation (RAG)** system designed to deliver expert-level answers for **Python programming queries**.  
+It intelligently crawls documentation, indexes high-quality content, and serves responses powered by **Groq LLM** and **Qdrant Cloud** for vector retrieval.
 
-## Features
+---
 
-- **Intelligent Query Classification**: Automatically detects user intent (code, examples, debugging, etc.)
-- **Advanced Retrieval**: Hybrid search with BM25 + semantic embeddings + reranking
-- **Quality-Aware Indexing**: Content quality scoring and deduplication
-- **Web Crawling**: Automated crawling of Python documentation and tutorials
-- **RESTful API**: FastAPI-based API with automatic documentation
-- **Monitoring**: Prometheus metrics and health checks
-- **CLI Tools**: Command-line interface for all operations
+## 🚀 Key Features
 
-## Quick Start
+### 🕷️ Smart Web Crawler
+- **Asynchronous multi-domain crawling** with Crawl4AI.
+- **Quality-based filtering** using text structure, code presence, and uniqueness.
+- **Language detection**, deduplication (SimHash + SQLite), and adaptive throttling.
+- Resumable checkpoints and robot.txt compliance.
 
-### Prerequisites
+### 🧩 Intelligent Indexing
+- Automatic **text chunking** with LangChain’s `RecursiveCharacterTextSplitter`.
+- High-performance **embeddings** via `BAAI/bge-base-en-v1.5`.
+- Vector storage using **ChromaDB** or **Qdrant Cloud**.
+- Metadata tracking for each page (domain, quality, word count, etc.).
 
-- Python 3.8+
-- pip
-- Git
+### 🔍 RAG Query System
+- Hybrid retrieval (**semantic + BM25 keyword**).
+- Optional **reranking** with `BAAI/bge-reranker-v2-m3`.
+- Multi-stage LLM pipeline:
+  - **Query rewriting** (Groq).
+  - **Context synthesis** via prompt building.
+  - **Answer verification** for factual correctness.
+- Built-in **performance metrics**, Prometheus monitoring, and health checks.
 
+### 💬 Web UI (Frontend)
+- Fast, accessible **single-page interface** built with vanilla JS.
+- Real-time chat, source panel, theme toggle, and local conversation history.
+- System status (connected / offline) and live metrics display.
+- Works directly with FastAPI backend — no external dependencies.
 
-# PyChat: AI-Powered Python Knowledge Assistant
+---
 
-## Overview
-PyChat is a Retrieval-Augmented Generation (RAG) system designed to answer Python, data science, machine learning, and web development questions using advanced document retrieval and large language models. It features a modular backend, a modern frontend, and robust crawling, indexing, and serving capabilities.
+## 🏗️ Project Structure
 
-## File Structure
 ```
 PyChat/
-├── analytics.py           # Data analytics utilities
-├── api.py                 # FastAPI server entrypoint
-├── ask.py                 # Query routing and orchestration
-├── config.py              # Configuration management
-├── crawler.py             # Main crawler orchestrator
-├── db_utils.py            # Database utilities
-├── embeddings.py          # Embedding generation and management
-├── indexer.py             # Document indexing and vector storage
-├── quality_analyzer.py    # Content quality analysis
-├── run.py                 # CLI entrypoint for crawling, serving, and more
-├── sources.yaml           # Crawl source configuration
-├── rag_api/               # RAG API logic and utilities
-│   ├── main.py            # FastAPI app and endpoints
-│   ├── retriever.py       # Hybrid retriever (semantic + keyword)
-│   ├── prompt_builder.py  # Prompt construction for LLMs
-│   ├── llm_client.py      # LLM API integration (Groq, etc.)
-│   ├── classifier.py      # Intent classification
-│   ├── schemas.py         # API schemas and models
-│   └── utils/             # Logging, caching, helpers
-├── crawler/               # Crawler modules
-│   ├── config_loader.py   # Source config loader
-│   ├── content_extractors.py # HTML/Markdown extraction
-│   ├── content_processor.py  # Content cleaning and normalization
-│   ├── domain_worker.py   # Per-domain crawl logic
-│   ├── fetchers.py        # Web fetcher and browser automation
-│   ├── monitoring.py      # Crawl monitoring and metrics
-│   ├── orchestrator.py    # Crawl orchestration and scheduling
-│   ├── robots_handler.py  # Robots.txt and crawl rules
-│   ├── state_manager.py   # Checkpointing and resume logic
-│   ├── url_utils.py       # URL normalization and filtering
-│   └── models.py          # Data models for crawl results
-├── frontend/              # Web frontend (HTML, JS, CSS)
-│   ├── index.html         # Main UI
-│   ├── script.js          # UI logic and API calls
-│   └── style.css          # Modern glassmorphism styling
-# PyChat — RAG system for Python assistance
-
-PyChat is a Retrieval-Augmented Generation (RAG) system that helps answer Python, data science, and web-development questions by combining web crawling, semantic indexing, and LLM-backed generation.
-
-Key components:
-- Crawler: collects and normalizes HTML/Markdown content from configured sources
-- Indexer: builds embeddings and stores vectors for fast retrieval
-- API server: a FastAPI app that performs hybrid retrieval and LLM prompting
-- Frontend: a small web UI for chat and diagnostics
-
-## Features
-
-- Hybrid retrieval (BM25 + semantic embeddings + reranking)
-- Quality-aware indexing and deduplication
-- Pluggable embedding and LLM providers
-- Checkpointed crawling with resume capability
-- Simple CLI for crawl/index/serve workflows
-
-## Minimal file overview
-
-`PyChat/` (top-level project)
-
-- `api.py` — FastAPI server entrypoint
-- `run.py` — CLI runner (crawl / index / serve / analyze)
-- `crawler/` — crawler modules and helpers
-- `rag_api/` — RAG API code (retriever, prompt builder, llm client)
-- `data/` — local storage for crawled data, vectordb, checkpoints
-- `frontend/` — `index.html`, `script.js`, `style.css`
-- `requirements.txt` — Python dependencies
-- `.gitignore`, `README.md`, `LICENSE`
-
-## Quick start
-
-1. Create and activate a virtual environment (outside the repo directory if possible):
-
-```bat
-python -m venv C:\path\to\venv
-C:\path\to\venv\Scripts\activate.bat
+│
+├── crawler/                    # Asynchronous crawler system
+│   ├── config_loader.py        # Loads sources.yaml
+│   ├── content_processor.py    # Cleans & validates content
+│   ├── domain_worker.py        # Worker for domain-level tasks
+│   ├── orchestrator.py         # Crawler manager & event loop
+│   ├── robots_handler.py       # Handles robots.txt & sitemaps
+│   ├── state_manager.py        # Checkpoints & crawl state
+│   ├── models.py               # Core data models
+│   └── url_utils.py            # Normalization & filtering
+│
+├── embeddings.py               # HuggingFace SentenceTransformer wrapper
+├── indexer.py                  # Chunking, embedding & indexing into Chroma
+├── analytics.py                # Post-crawl analytics & quality reports
+├── db_utils.py                 # SQLite databases for dedup & metadata
+├── quality_analyzer.py         # Content scoring logic
+├── migrate_to_qdrant.py        # Migrates embeddings from Chroma → Qdrant
+│
+├── rag_api/
+│   ├── main.py                 # FastAPI app entry point
+│   ├── llm_client.py           # Groq client wrapper with caching
+│   ├── retriever.py            # Qdrant + BM25 hybrid retriever
+│   ├── prompt_builder.py       # Context + query prompt templates
+│   ├── classifier.py           # Query intent & complexity detection
+│   ├── schemas.py              # Pydantic models for API I/O
+│   └── utils/
+│       ├── logging.py          # Rich console & performance tracking
+│       └── cache.py            # Embedding & rewrite caches
+│
+├── frontend/                   # Web UI
+│   ├── index.html
+│   ├── style.css
+│   └── script.js
+│
+├── config.py                   # Global settings & environment loader
+├── run.py                      # CLI for crawl, index, serve, analyze
+├── ask.py                      # Direct Groq CLI query tool
+├── sources.yaml                # Crawl seed configuration
+├── .env.example                # Environment template
+└── requirements.txt
 ```
 
-2. Install dependencies:
+---
 
-```bat
+## ⚙️ Setup & Installation
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/yourusername/pychat.git
+cd pychat
+```
+
+### 2. Install Dependencies
+```bash
 pip install -r requirements.txt
 ```
 
-3. Create a `.env` (not checked into git) with provider API keys, or export env vars.
-
-4. Run the CLI:
-
-```bat
-python run.py crawl   :: to crawl sources
-python run.py index   :: to build/update the vector index
-python run.py serve   :: to start the API server (or use uvicorn)
+### 3. Configure Environment
+Copy `.env.example` to `.env` and fill in:
+```env
+QDRANT_URL=https://your-qdrant-instance.qdrant.tech
+QDRANT_API_KEY=your_api_key_here
+GROQ_API_KEY=your_groq_key_here
 ```
 
-## Notes and safety
+### 4. Prepare Data Directories
+```bash
+mkdir -p data/checkpoints data/vectordb data/logs
+```
 
-- Never commit `.env` or API keys to the repository. Use `.env.example` for names only.
-- Keep the virtualenv out of the repository. Add it to `.gitignore` (e.g., `PyChat/`).
-- If an API key was pushed previously, rotate/revoke it immediately at the provider (deleting from git history is not enough).
+---
 
+## 🕸️ Crawling Knowledge Sources
 
+Edit `sources.yaml` to define your seed domains, e.g.:
+```yaml
+sources:
+  python:
+    - url: "https://docs.python.org/3/"
+      max_pages: 2000
+      quality_threshold: 45
+```
+
+Run the crawler:
+```bash
+python run.py crawl --quality-threshold 50 --max-pages 5000
+```
+
+This will:
+- Crawl all Python-related docs.
+- Filter and clean content.
+- Save results to `data/crawled.jsonl`.
+
+---
+
+## 🧠 Indexing the Data
+
+Convert crawled data into embeddings and store in Chroma:
+```bash
+python run.py index
+```
+
+Then migrate to Qdrant for production:
+```bash
+python migrate_to_qdrant.py
+```
+
+---
+
+## 🧩 Starting the API Server
+
+```bash
+python run.py serve
+```
+
+Access the API at:
+```
+http://127.0.0.1:8000
+```
+
+- Swagger Docs: `/docs`
+- Metrics: `/metrics`
+- Prometheus endpoint: `/prometheus`
+- Health check: `/health`
+
+---
+
+## 💬 Using the Web UI
+
+Once the API is running, open:
+```
+http://127.0.0.1:8000/
+```
+
+You’ll see the PyChat frontend — ask any Python question:
+> _“How to read a CSV file with pandas?”_  
+> _“Explain decorators in Python.”_
+
+The system retrieves, synthesizes, and verifies an answer with linked sources.
+
+---
+
+## 📈 Analytics & Reports
+
+After crawling:
+```bash
+python run.py analyze
+```
+
+Generates `data/quality_report.json` and prints insights:
+- Content quality distribution
+- Domain breakdown
+- Boilerplate ratios
+- Duplicate detection
+- Top-quality pages
+
+---
+
+## 🧪 CLI Utilities
+
+| Command | Description |
+|----------|--------------|
+| `python run.py crawl` | Start web crawler |
+| `python run.py index` | Index crawled data |
+| `python run.py serve` | Run FastAPI backend |
+| `python run.py query "your question"` | Query via CLI |
+| `python run.py analyze` | Generate analytics |
+| `python run.py clean` | Reset all data (clears DB, checkpoints, etc.) |
+
+Direct Groq test:
+```bash
+python ask.py "Explain Python context managers"
+```
+
+---
+
+## 🧰 Tech Stack
+
+| Layer | Technology |
+|--------|-------------|
+| **LLM** | Groq (Llama-3.1-8B-Instant) |
+| **Vector DB** | Qdrant Cloud |
+| **Crawler** | Crawl4AI + aiohttp + BeautifulSoup |
+| **Embeddings** | SentenceTransformers (`BAAI/bge-base-en-v1.5`) |
+| **Backend** | FastAPI |
+| **Frontend** | HTML + CSS + Vanilla JS |
+| **Storage** | SQLite (dedup, metadata) |
+| **Monitoring** | Prometheus metrics |
+
+---
+
+## 🧭 Design Highlights
+
+- Fully **modular pipeline**: crawl → index → query.
+- Smart queueing with **priority-based URL selection**.
+- Quality-driven acceptance with structured scoring.
+- Cache layers for **embeddings**, **rewrites**, and **retrievals**.
+- Fault-tolerant orchestration with async tasks.
+- Clean API architecture with validation & schemas.
+
+---
+
+## 🧑‍💻 Development Notes
+
+- Python ≥ 3.10 required.
+- GPU optional (auto-detects for embeddings).
+- Frontend served automatically from `/frontend`.
+- Crawls resume from checkpoints unless `--clean` is run.
+
+---
+
+## 🛡️ License
+
+This project is licensed under the **MIT License** — see `LICENSE` for details.
+
+---
+
+## 🌟 Acknowledgements
+
+- [Crawl4AI](https://github.com/nidhaloff/crawl4ai)
+- [Qdrant](https://qdrant.tech)
+- [SentenceTransformers](https://www.sbert.net)
+- [LangChain](https://www.langchain.com)
+- [Groq Cloud](https://groq.com)
