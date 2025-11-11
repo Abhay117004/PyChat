@@ -28,4 +28,4 @@ simhash
 tqdm
 uvicorn
 torch
-
+qdrant_client
