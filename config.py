@@ -7,6 +7,7 @@ BASE_DIR = Path(__file__).parent
 DATA_DIR = BASE_DIR / "data"
 DATA_DIR.mkdir(exist_ok=True)
 
+IS_RENDER = os.environ.get("RENDER", "false").lower() == "true"
 
 class Settings(BaseSettings):
     crawled_file: Path = DATA_DIR / "crawled.jsonl"
@@ -55,14 +56,14 @@ class Settings(BaseSettings):
     min_chunk_size: int = 100
 
     embedding_provider: str = "huggingface"
-    embedding_model_name: str = "BAAI/bge-base-en-v1.5"
+    embedding_model_name: str = "sentence-transformers/all-MiniLM-L6-v2"  # BAAI/bge-base-en-v1.5 for better results
     embedding_device: str = "cuda"
     embedding_batch_size: int = 64
 
     top_k_results: int = 7
     retrieval_candidate_multiplier: int = 3
     enable_reranking: bool = True
-    reranker_model_name: str = "BAAI/bge-reranker-v2-m3"
+    reranker_model_name: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"  # BAAI/bge-reranker-v2-m3 for better results
     enable_quality_weighted_search: bool = True
     show_quality_scores_in_response: bool = True
     enable_query_rewriting: bool = True
@@ -89,18 +90,13 @@ class Settings(BaseSettings):
 
     api_host: str = "127.0.0.1"
     api_port: int = 8000
-        # existing stuff
+
     collection_name: str = "rag_collection"
 
-    # Qdrant config — loaded from .env automatically
     QDRANT_URL: str
     QDRANT_API_KEY: str
     QDRANT_COLLECTION: str = "pychat_knowledge"
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        extra = "ignore"
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

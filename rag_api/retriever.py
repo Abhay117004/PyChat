@@ -1,98 +1,131 @@
-from typing import List, Dict, Optional
-import asyncio, json, hashlib
-from sentence_transformers import CrossEncoder, SentenceTransformer
+import asyncio
+import requests
+from typing import List, Dict, Any
+from loguru import logger
 from qdrant_client import QdrantClient
-from qdrant_client.http.models import Filter, FieldCondition, MatchValue
-from rank_bm25 import BM25Okapi
+from config import settings
 from config import QDRANT_URL, QDRANT_API_KEY, QDRANT_COLLECTION
-
-from config import settings, QDRANT_URL, QDRANT_API_KEY, QDRANT_COLLECTION
-from .utils.logging import log_success, log_warning, log_step, timeit
 from .utils.cache import embedding_cache
+import os
 
+IS_RENDER = os.environ.get("RENDER", "false").lower() == "true"
 
 class Retriever:
     def __init__(self):
-        self.embedding_model = SentenceTransformer(settings.embedding_model_name)
+        self.collection_name = QDRANT_COLLECTION
+        self.qdrant = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
+
+        self.embedding_model = None
+        self.reranker = None
         self.bm25_index = None
         self.document_cache = {}
         self.retrieval_cache = {}
-        self.reranker = self._load_reranker()
 
-        log_step("Database", f"Connecting to Qdrant Cloud collection '{QDRANT_COLLECTION}'")
-        self.qdrant = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
-        self.collection_name = QDRANT_COLLECTION
-        self._build_bm25_index()
+        # Try local models only if not on Render
+        if not IS_RENDER:
+            try:
+                from sentence_transformers import SentenceTransformer, CrossEncoder
+                self.embedding_model = SentenceTransformer(settings.embedding_model_name)
+                self.reranker = CrossEncoder(settings.reranker_model_name)
+                logger.success(f"Loaded local embedding model: {settings.embedding_model_name}")
+                logger.success(f"Loaded local reranker model: {settings.reranker_model_name}")
+            except Exception as e:
+                logger.warning(f"Local model load failed. Falling back to Jina API: {e}")
+        else:
+            logger.info("Render environment detected. Skipping local model loading, using Jina APIs instead.")
 
-    def _load_reranker(self) -> Optional[CrossEncoder]:
-        if not settings.enable_reranking:
-            return None
+        # API endpoints for Jina fallback
+        self.jina_key = settings.JINA_API_KEY
+        self.jina_embed_url = "https://api.jina.ai/v1/embeddings"
+        self.jina_rerank_url = "https://api.jina.ai/v1/rerank"
+
         try:
-            log_step("Reranker", f"Loading {settings.reranker_model_name}")
-            reranker = CrossEncoder(settings.reranker_model_name)
-            log_success("Reranker loaded successfully")
-            return reranker
+            self._build_bm25_index()
         except Exception as e:
-            log_warning(f"Could not load reranker: {e}")
-            return None
+            logger.warning(f"BM25 index build skipped: {e}")
 
-    def _build_bm25_index(self):
-        try:
-            log_step("BM25", "Building keyword index from Qdrant payloads...")
-            docs = self.qdrant.scroll(collection_name=self.collection_name, limit=50000)[0]
-            texts = [p.payload.get("text", "") for p in docs if p.payload.get("text")]
-            metas = [p.payload for p in docs]
-            tokenized_docs = [t.lower().split() for t in texts]
-            self.bm25_index = BM25Okapi(tokenized_docs)
-            self.document_cache = {i: {"text": t, "metadata": m} for i, (t, m) in enumerate(zip(texts, metas))}
-            log_success(f"BM25 index built with {len(self.document_cache):,} docs")
-        except Exception as e:
-            log_warning(f"Could not build BM25 index: {e}")
-
-    @timeit
     async def embed_query(self, query: str) -> List[float]:
+        if not query:
+            logger.warning("Empty query received for embedding.")
+            return []
+
         cached = embedding_cache.get(query)
         if cached is not None:
-            log_step("Cache", "Embedding cache hit")
+            logger.debug("Using cached embedding.")
             return cached
-        loop = asyncio.get_running_loop()
-        embedding = await loop.run_in_executor(None, lambda: self.embedding_model.encode([query]).tolist()[0])
-        embedding_cache.set(query, embedding)
-        return embedding
 
-    @timeit
+        # Use local SentenceTransformer if available
+        if self.embedding_model:
+            try:
+                emb = self.embedding_model.encode([query])[0]
+                embedding_cache.set(query, emb)
+                return emb
+            except Exception as e:
+                logger.error(f"Local embedding failed: {e}")
+
+        # Fallback to Jina Cloud embeddings
+        if not self.jina_key:
+            logger.error("No JINA_API_KEY provided for fallback embedding.")
+            return []
+
+        headers = {"Authorization": f"Bearer {self.jina_key}", "Content-Type": "application/json"}
+        payload = {"model": "jina-embeddings-v2-base-en", "input": [query]}
+
+        try:
+            res = requests.post(self.jina_embed_url, headers=headers, json=payload, timeout=30)
+            res.raise_for_status()
+            data = res.json().get("data", [])
+            if not data:
+                logger.error("Jina returned empty embedding response.")
+                return []
+            emb = data[0]["embedding"]
+            embedding_cache.set(query, emb)
+            return emb
+        except Exception as e:
+            logger.error(f"Jina embedding API failed: {e}")
+            return []
+
     async def retrieve(self, query_embedding: List[float], n_results: int = None) -> List[Dict]:
         n_results = n_results or settings.top_k_results * settings.retrieval_candidate_multiplier
-        n_results = min(n_results, 50)
-        hits = self.qdrant.search(
-            collection_name=self.collection_name,
-            query_vector=query_embedding,
-            limit=n_results,
-            with_payload=True,
-        )
-        candidates = [{"text": h.payload.get("text", ""), "metadata": h.payload, "score": float(h.score)} for h in hits]
-        log_step("Retrieval", f"Retrieved {len(candidates)} results from Qdrant Cloud")
-        return candidates
+        try:
+            hits = self.qdrant.search(
+                collection_name=self.collection_name,
+                query_vector=query_embedding,
+                limit=n_results,
+                with_payload=True,
+            )
+            docs = [{"text": h.payload.get("text", ""), "metadata": h.payload, "score": float(h.score)} for h in hits]
+            logger.info(f"Retrieved {len(docs)} semantic results from Qdrant.")
+            return docs
+        except Exception as e:
+            logger.error(f"Qdrant retrieval failed: {e}")
+            return []
 
-    @timeit
     async def hybrid_retrieve(self, query: str, n_results: int = None) -> List[Dict]:
         query_emb = await self.embed_query(query)
         semantic = await self.retrieve(query_emb, n_results)
+
+        # BM25 optional local text match
         if not self.bm25_index:
             return semantic
-        loop = asyncio.get_running_loop()
-        bm25_scores = await loop.run_in_executor(None, self.bm25_index.get_scores, query.lower().split())
-        bm25_results = []
-        for idx in sorted(range(len(bm25_scores)), key=lambda i: bm25_scores[i], reverse=True)[:n_results]:
-            if idx in self.document_cache:
-                bm25_results.append({
-                    "text": self.document_cache[idx]["text"],
-                    "metadata": self.document_cache[idx]["metadata"],
-                    "score": float(bm25_scores[idx])
-                })
-        merged = self._merge_results(semantic, bm25_results)
-        log_step("Hybrid", f"Merged {len(merged)} hybrid results")
-        return merged
+
+        try:
+            loop = asyncio.get_running_loop()
+            bm25_scores = await loop.run_in_executor(None, self.bm25_index.get_scores, query.lower().split())
+            bm25_results = []
+            for idx in sorted(range(len(bm25_scores)), key=lambda i: bm25_scores[i], reverse=True)[:n_results]:
+                if idx in self.document_cache:
+                    bm25_results.append({
+                        "text": self.document_cache[idx]["text"],
+                        "metadata": self.document_cache[idx]["metadata"],
+                        "score": float(bm25_scores[idx])
+                    })
+            merged = self._merge_results(semantic, bm25_results)
+            logger.info(f"Merged {len(merged)} hybrid results.")
+            return merged
+        except Exception as e:
+            logger.warning(f"BM25 merge failed: {e}")
+            return semantic
 
     def _merge_results(self, semantic: List[Dict], bm25: List[Dict]) -> List[Dict]:
         seen = {}
@@ -116,19 +149,77 @@ class Retriever:
 
     async def get_top_documents(self, query: str, intent: str, k: int = None) -> List[Dict]:
         k = k or settings.top_k_results
-        cache_key = hashlib.md5(f"{query}_{intent}".encode()).hexdigest()
+        cache_key = f"{query}__{intent}"
         if cache_key in self.retrieval_cache:
-            log_step("Cache", "Retrieval cache hit")
+            logger.debug("Using cached retrieval results.")
             return self.retrieval_cache[cache_key]
+
         candidates = await self.hybrid_retrieve(query, k * 3)
         candidates = sorted(candidates, key=lambda x: x["score"], reverse=True)
         top_docs = candidates[:k]
-        self.retrieval_cache[cache_key] = top_docs
-        return top_docs
+        reranked = await self._rerank(query, top_docs, k)
+        self.retrieval_cache[cache_key] = reranked
+        return reranked
+
+    async def _rerank(self, query: str, docs: List[Dict], k: int = None) -> List[Dict]:
+        if not docs:
+            return []
+        # Local reranker if available
+        if self.reranker:
+            try:
+                pairs = [(query, d["text"]) for d in docs]
+                scores = self.reranker.predict(pairs)
+                for d, s in zip(docs, scores):
+                    d["score"] = float(s)
+                docs.sort(key=lambda x: x["score"], reverse=True)
+                logger.info("Used local reranker for reranking.")
+                return docs[:k] if k else docs
+            except Exception as e:
+                logger.warning(f"Local reranking failed: {e}")
+
+        # Fallback to Jina Cloud reranker
+        if not self.jina_key:
+            logger.error("No JINA_API_KEY provided for fallback reranking.")
+            return docs[:k] if k else docs
+
+        headers = {"Authorization": f"Bearer {self.jina_key}", "Content-Type": "application/json"}
+        payload = {"model": "jina-reranker-v1-base-en", "query": query, "documents": [d["text"] for d in docs]}
+        try:
+            res = requests.post(self.jina_rerank_url, headers=headers, json=payload, timeout=30)
+            res.raise_for_status()
+            results = res.json().get("results", [])
+            for d, r in zip(docs, results):
+                d["score"] = r.get("relevance_score", d.get("score", 0.0))
+            docs.sort(key=lambda x: x["score"], reverse=True)
+            logger.info("Used Jina Cloud reranker.")
+            return docs[:k] if k else docs
+        except Exception as e:
+            logger.error(f"Jina reranker API failed: {e}")
+            return docs[:k] if k else docs
+
+    def _build_bm25_index(self):
+        try:
+            from rank_bm25 import BM25Okapi
+            from qdrant_client.http import models as rest
+            hits = self.qdrant.scroll(
+                collection_name=self.collection_name,
+                scroll_filter=None,
+                limit=10000,
+                with_payload=True
+            )[0]
+            docs = [h.payload.get("text", "") for h in hits]
+            tokenized = [d.lower().split() for d in docs if isinstance(d, str)]
+            self.bm25_index = BM25Okapi(tokenized)
+            self.document_cache = {i: {"text": docs[i], "metadata": hits[i].payload} for i in range(len(docs))}
+            logger.success(f"BM25 index built with {len(docs)} documents.")
+        except Exception as e:
+            logger.warning(f"Failed to build BM25 index: {e}")
+            self.bm25_index = None
 
     def get_stats(self) -> Dict:
         try:
             count = self.qdrant.count(self.collection_name).count
-            return {"total_chunks": count, "unique_pages": 0, "average_quality": 0.0, "content_types": {}}
-        except Exception:
-            return {"total_chunks": 0, "unique_pages": 0, "average_quality": 0.0, "content_types": {}}
+            return {"total_chunks": count, "bm25_enabled": bool(self.bm25_index)}
+        except Exception as e:
+            logger.error(f"Failed to get stats: {e}")
+            return {"total_chunks": 0, "bm25_enabled": False}
