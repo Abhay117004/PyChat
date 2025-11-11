@@ -96,7 +96,7 @@ class Settings(BaseSettings):
     QDRANT_URL: str
     QDRANT_API_KEY: str
     QDRANT_COLLECTION: str = "pychat_knowledge"
-
+    JINA_API_KEY: Optional[str] = None
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
@@ -107,3 +107,4 @@ settings = Settings()
 QDRANT_URL = settings.QDRANT_URL
 QDRANT_API_KEY = settings.QDRANT_API_KEY
 QDRANT_COLLECTION = settings.QDRANT_COLLECTION
+JINA_API_KEY = settings.JINA_API_KEY

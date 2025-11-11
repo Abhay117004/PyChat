@@ -219,7 +219,19 @@ class Retriever:
     def get_stats(self) -> Dict:
         try:
             count = self.qdrant.count(self.collection_name).count
-            return {"total_chunks": count, "bm25_enabled": bool(self.bm25_index)}
+            return {
+                "total_chunks": count,
+                "unique_pages": 0,
+                "average_quality": 0.0,
+                "content_types": {},
+                "bm25_enabled": bool(self.bm25_index),
+            }
         except Exception as e:
             logger.error(f"Failed to get stats: {e}")
-            return {"total_chunks": 0, "bm25_enabled": False}
+            return {
+                "total_chunks": 0,
+                "unique_pages": 0,
+                "average_quality": 0.0,
+                "content_types": {},
+                "bm25_enabled": False,
+            }
