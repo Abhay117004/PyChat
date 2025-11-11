@@ -1,38 +1,38 @@
-# 🧠 PyChat — AI-Powered Python Programming Assistant
+# 🧠 PyChat — AI-Powered Python Chatbot
 
-PyChat is a **production-grade Retrieval-Augmented Generation (RAG)** system designed to deliver expert-level answers for **Python programming queries**.  
-It intelligently crawls documentation, indexes high-quality content, and serves responses powered by **Groq LLM** and **Qdrant Cloud** for vector retrieval.
+PyChat is an **AI-driven Retrieval-Augmented Generation (RAG)** project that provides context-aware answers to Python programming questions.  
+It combines intelligent web crawling, document indexing, and hybrid retrieval with an interactive web-based chat interface.  
+The live chatbot is hosted here:  
+👉 **[https://pychat-jryk.onrender.com/](https://pychat-jryk.onrender.com/)**
 
 ---
 
-## 🚀 Key Features
+## 🚀 Features
 
-### 🕷️ Smart Web Crawler
-- **Asynchronous multi-domain crawling** with Crawl4AI.
-- **Quality-based filtering** using text structure, code presence, and uniqueness.
-- **Language detection**, deduplication (SimHash + SQLite), and adaptive throttling.
-- Resumable checkpoints and robot.txt compliance.
+### 🕷️ Web Crawler
+- Asynchronous multi-domain crawler using **Crawl4AI**.  
+- Content filtering based on structure, word count, and code snippets.  
+- Automatic deduplication with **SimHash** and SQLite.  
+- Resumable checkpoints and robots.txt compliance.  
 
-### 🧩 Intelligent Indexing
-- Automatic **text chunking** with LangChain’s `RecursiveCharacterTextSplitter`.
-- High-performance **embeddings** via `BAAI/bge-base-en-v1.5`.
-- Vector storage using **ChromaDB** or **Qdrant Cloud**.
-- Metadata tracking for each page (domain, quality, word count, etc.).
+### 🧩 Indexing & Embeddings
+- Smart text chunking with **RecursiveCharacterTextSplitter**.  
+- Embeddings via **Jina AI (768-dim)** for consistency across environments.  
+- Local or remote indexing into **Qdrant Cloud**.  
+- Supports metadata (URL, title, quality score, word count, etc.).  
 
-### 🔍 RAG Query System
-- Hybrid retrieval (**semantic + BM25 keyword**).
-- Optional **reranking** with `BAAI/bge-reranker-v2-m3`.
-- Multi-stage LLM pipeline:
-  - **Query rewriting** (Groq).
-  - **Context synthesis** via prompt building.
-  - **Answer verification** for factual correctness.
-- Built-in **performance metrics**, Prometheus monitoring, and health checks.
+### 🔍 Retrieval System
+- **Hybrid retrieval** combining semantic search and BM25 keyword matching.  
+- **Reranking** powered by **Jina AI** (cloud API fallback on Render).  
+- **Groq LLM** used for final answer generation.  
+- Query rewriting and factual verification pipeline.  
+- Built-in metrics and Prometheus endpoint for performance tracking.  
 
-### 💬 Web UI (Frontend)
-- Fast, accessible **single-page interface** built with vanilla JS.
-- Real-time chat, source panel, theme toggle, and local conversation history.
-- System status (connected / offline) and live metrics display.
-- Works directly with FastAPI backend — no external dependencies.
+### 💬 Chat Interface
+- Responsive single-page web UI built with **HTML + CSS + Vanilla JS**.  
+- Chat input, response streaming, and source display.  
+- Local conversation history and theme toggle.  
+- Works directly with the FastAPI backend hosted on **Render**.  
 
 ---
 
@@ -41,42 +41,42 @@ It intelligently crawls documentation, indexes high-quality content, and serves 
 ```
 PyChat/
 │
-├── crawler/                    # Asynchronous crawler system
-│   ├── config_loader.py        # Loads sources.yaml
-│   ├── content_processor.py    # Cleans & validates content
-│   ├── domain_worker.py        # Worker for domain-level tasks
-│   ├── orchestrator.py         # Crawler manager & event loop
-│   ├── robots_handler.py       # Handles robots.txt & sitemaps
-│   ├── state_manager.py        # Checkpoints & crawl state
-│   ├── models.py               # Core data models
-│   └── url_utils.py            # Normalization & filtering
+├── crawler/
+│   ├── config_loader.py
+│   ├── content_processor.py
+│   ├── domain_worker.py
+│   ├── orchestrator.py
+│   ├── robots_handler.py
+│   ├── state_manager.py
+│   ├── models.py
+│   └── url_utils.py
 │
-├── embeddings.py               # HuggingFace SentenceTransformer wrapper
-├── indexer.py                  # Chunking, embedding & indexing into Chroma
-├── analytics.py                # Post-crawl analytics & quality reports
-├── db_utils.py                 # SQLite databases for dedup & metadata
-├── quality_analyzer.py         # Content scoring logic
-├── migrate_to_qdrant.py        # Migrates embeddings from Chroma → Qdrant
+├── embeddings.py               # Embedding engine (local/Jina hybrid)
+├── indexer.py                  # Chunk → embed → index pipeline
+├── analytics.py                # Crawl and quality reports
+├── db_utils.py                 # SQLite for dedup & metadata
+├── quality_analyzer.py         # Content scoring
+├── migrate_to_qdrant.py        # Uploads Chroma vectors to Qdrant Cloud
 │
 ├── rag_api/
-│   ├── main.py                 # FastAPI app entry point
-│   ├── llm_client.py           # Groq client wrapper with caching
-│   ├── retriever.py            # Qdrant + BM25 hybrid retriever
-│   ├── prompt_builder.py       # Context + query prompt templates
-│   ├── classifier.py           # Query intent & complexity detection
-│   ├── schemas.py              # Pydantic models for API I/O
+│   ├── main.py                 # FastAPI app
+│   ├── llm_client.py           # Groq API wrapper
+│   ├── retriever.py            # Hybrid Qdrant + BM25 retriever
+│   ├── prompt_builder.py       # Prompt assembly
+│   ├── classifier.py           # Query intent classifier
+│   ├── schemas.py              # Pydantic models
 │   └── utils/
-│       ├── logging.py          # Rich console & performance tracking
-│       └── cache.py            # Embedding & rewrite caches
+│       ├── logging.py
+│       └── cache.py
 │
-├── frontend/                   # Web UI
+├── frontend/
 │   ├── index.html
 │   ├── style.css
 │   └── script.js
 │
 ├── config.py                   # Global settings & environment loader
-├── run.py                      # CLI for crawl, index, serve, analyze
-├── ask.py                      # Direct Groq CLI query tool
+├── run.py                      # CLI for crawl, index, serve, etc.
+├── ask.py                      # Command-line query tool
 ├── sources.yaml                # Crawl seed configuration
 ├── .env.example                # Environment template
 └── requirements.txt
@@ -84,9 +84,9 @@ PyChat/
 
 ---
 
-## ⚙️ Setup & Installation
+## ⚙️ Setup
 
-### 1. Clone the Repository
+### 1. Clone
 ```bash
 git clone https://github.com/yourusername/pychat.git
 cd pychat
@@ -101,20 +101,21 @@ pip install -r requirements.txt
 Copy `.env.example` to `.env` and fill in:
 ```env
 QDRANT_URL=https://your-qdrant-instance.qdrant.tech
-QDRANT_API_KEY=your_api_key_here
-GROQ_API_KEY=your_groq_key_here
+QDRANT_API_KEY=your_qdrant_api_key
+GROQ_API_KEY=your_groq_api_key
+JINA_API_KEY=your_jina_api_key
 ```
 
-### 4. Prepare Data Directories
+### 4. Prepare Directories
 ```bash
 mkdir -p data/checkpoints data/vectordb data/logs
 ```
 
 ---
 
-## 🕸️ Crawling Knowledge Sources
+## 🕸️ Crawl Documentation
 
-Edit `sources.yaml` to define your seed domains, e.g.:
+Edit `sources.yaml`:
 ```yaml
 sources:
   python:
@@ -123,144 +124,125 @@ sources:
       quality_threshold: 45
 ```
 
-Run the crawler:
+Run:
 ```bash
-python run.py crawl --quality-threshold 50 --max-pages 5000
+python run.py crawl --max-pages 2000 --quality-threshold 45
 ```
 
-This will:
-- Crawl all Python-related docs.
-- Filter and clean content.
-- Save results to `data/crawled.jsonl`.
+Outputs cleaned content to `data/crawled.jsonl`.
 
 ---
 
-## 🧠 Indexing the Data
+## 🧠 Index and Upload
 
-Convert crawled data into embeddings and store in Chroma:
+Create embeddings and index locally:
 ```bash
 python run.py index
 ```
 
-Then migrate to Qdrant for production:
+Migrate to Qdrant Cloud:
 ```bash
 python migrate_to_qdrant.py
 ```
 
+Qdrant will store **768-dim vectors** for Jina embeddings.
+
 ---
 
-## 🧩 Starting the API Server
+## 🧩 Start the API Server
 
 ```bash
 python run.py serve
 ```
 
-Access the API at:
+Then visit:
 ```
-http://127.0.0.1:8000
+http://127.0.0.1:8000/docs
 ```
 
-- Swagger Docs: `/docs`
-- Metrics: `/metrics`
-- Prometheus endpoint: `/prometheus`
-- Health check: `/health`
+Endpoints:
+- `/query` — RAG question answering  
+- `/stats` — system info  
+- `/prometheus` — metrics  
+- `/health` — status  
 
 ---
 
-## 💬 Using the Web UI
+## 💬 Web Chat UI
 
-Once the API is running, open:
+With the backend running, open:
 ```
 http://127.0.0.1:8000/
 ```
 
-You’ll see the PyChat frontend — ask any Python question:
-> _“How to read a CSV file with pandas?”_  
-> _“Explain decorators in Python.”_
+Ask questions such as:
+> *“Explain Python decorators.”*  
+> *“How do list comprehensions work?”*  
 
-The system retrieves, synthesizes, and verifies an answer with linked sources.
+PyChat retrieves relevant documentation, ranks it, and synthesizes an answer using Groq.
 
----
-
-## 📈 Analytics & Reports
-
-After crawling:
-```bash
-python run.py analyze
-```
-
-Generates `data/quality_report.json` and prints insights:
-- Content quality distribution
-- Domain breakdown
-- Boilerplate ratios
-- Duplicate detection
-- Top-quality pages
+The same chatbot is live here:  
+👉 **[https://pychat-jryk.onrender.com/](https://pychat-jryk.onrender.com/)**
 
 ---
 
-## 🧪 CLI Utilities
+## 🧪 CLI Tools
 
 | Command | Description |
-|----------|--------------|
-| `python run.py crawl` | Start web crawler |
-| `python run.py index` | Index crawled data |
-| `python run.py serve` | Run FastAPI backend |
-| `python run.py query "your question"` | Query via CLI |
+|----------|-------------|
+| `python run.py crawl` | Crawl documentation |
+| `python run.py index` | Create embeddings |
+| `python run.py migrate` | Push to Qdrant |
+| `python run.py serve` | Run FastAPI server |
+| `python run.py query "..."` | CLI query mode |
 | `python run.py analyze` | Generate analytics |
-| `python run.py clean` | Reset all data (clears DB, checkpoints, etc.) |
-
-Direct Groq test:
-```bash
-python ask.py "Explain Python context managers"
-```
+| `python run.py clean` | Clear data and checkpoints |
+| `python ask.py "..."` | Direct Groq call |
 
 ---
 
-## 🧰 Tech Stack
+## 🧰 Stack Overview
 
-| Layer | Technology |
-|--------|-------------|
+| Component | Technology |
+|------------|-------------|
 | **LLM** | Groq (Llama-3.1-8B-Instant) |
+| **Embeddings** | Jina AI v2 Base (768-D) |
 | **Vector DB** | Qdrant Cloud |
 | **Crawler** | Crawl4AI + aiohttp + BeautifulSoup |
-| **Embeddings** | SentenceTransformers (`BAAI/bge-base-en-v1.5`) |
-| **Backend** | FastAPI |
-| **Frontend** | HTML + CSS + Vanilla JS |
-| **Storage** | SQLite (dedup, metadata) |
-| **Monitoring** | Prometheus metrics |
+| **Backend** | FastAPI + Uvicorn |
+| **Frontend** | HTML / CSS / JS |
+| **Metrics** | Prometheus |
+| **Orchestration** | Render (Web Service) |
 
 ---
 
-## 🧭 Design Highlights
+## 🧭 Highlights
 
-- Fully **modular pipeline**: crawl → index → query.
-- Smart queueing with **priority-based URL selection**.
-- Quality-driven acceptance with structured scoring.
-- Cache layers for **embeddings**, **rewrites**, and **retrievals**.
-- Fault-tolerant orchestration with async tasks.
-- Clean API architecture with validation & schemas.
+- Modular pipeline: crawl → process → index → query.  
+- Local GPU support; automatic fallback to Jina Cloud on Render.  
+- Hybrid retrieval with BM25 + semantic search.  
+- Configurable models and weights via `.env`.  
+- Persistent vector storage and checkpointing.  
+- Built-in monitoring and logging.
 
 ---
 
-## 🧑‍💻 Development Notes
+## 🧑‍💻 Notes
 
-- Python ≥ 3.10 required.
-- GPU optional (auto-detects for embeddings).
-- Frontend served automatically from `/frontend`.
-- Crawls resume from checkpoints unless `--clean` is run.
+- Python ≥ 3.10  
+- GPU optional (auto-detects CUDA)  
+- Works offline locally, cloud-optimized for Render deployment  
 
 ---
 
 ## 🛡️ License
-
-This project is licensed under the **MIT License** — see `LICENSE` for details.
+MIT License — see `LICENSE` for details.  
 
 ---
 
-## 🌟 Acknowledgements
-
-- [Crawl4AI](https://github.com/nidhaloff/crawl4ai)
-- [Qdrant](https://qdrant.tech)
-- [SentenceTransformers](https://www.sbert.net)
-- [LangChain](https://www.langchain.com)
-- [Groq Cloud](https://groq.com)
+## 🌟 Credits
+- [Jina AI](https://jina.ai)  
+- [Qdrant Cloud](https://qdrant.tech)  
+- [Groq Cloud](https://groq.com)  
+- [SentenceTransformers](https://www.sbert.net)  
+- [Crawl4AI](https://github.com/nidhaloff/crawl4ai)  
