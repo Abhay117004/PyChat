@@ -18,7 +18,7 @@ QDRANT_COLLECTION = getattr(settings, "QDRANT_COLLECTION", "pychat_knowledge")
 if not QDRANT_URL or not QDRANT_API_KEY:
     raise RuntimeError("QDRANT_URL and QDRANT_API_KEY must be set in the environment or in settings")
 
-EMBEDDING_SIZE = getattr(settings, "embedding_size", 384)
+EMBEDDING_SIZE = getattr(settings, "embedding_size", 768)
 BATCH_SIZE = 1024
 
 print("Connecting to local Chroma DB...")

@@ -56,14 +56,14 @@ class Settings(BaseSettings):
     min_chunk_size: int = 100
 
     embedding_provider: str = "huggingface"
-    embedding_model_name: str = "sentence-transformers/all-MiniLM-L6-v2"  # BAAI/bge-base-en-v1.5 for better results
+    embedding_model_name: str = "BAAI/bge-base-en-v1.5"
     embedding_device: str = "cuda"
     embedding_batch_size: int = 64
 
     top_k_results: int = 7
     retrieval_candidate_multiplier: int = 3
     enable_reranking: bool = True
-    reranker_model_name: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"  # BAAI/bge-reranker-v2-m3 for better results
+    reranker_model_name: str = "BAAI/bge-reranker-v2-m3"
     enable_quality_weighted_search: bool = True
     show_quality_scores_in_response: bool = True
     enable_query_rewriting: bool = True
